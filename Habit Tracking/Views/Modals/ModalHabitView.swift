@@ -1,4 +1,5 @@
 import SwiftUI
+import UserNotifications
 
 struct ModalHabitView: View {
     @EnvironmentObject var dataStore: HabitDataStore
@@ -44,118 +45,119 @@ struct ModalHabitView: View {
     }
     
     var body: some View {
-        ZStack {
-            Color.color2.ignoresSafeArea()
+        Form {
+            Section {
+                VStack(spacing: 2) {
+                    Text(iconName)
+                        .font(.system(size: 60))
+                    
+                    Text("Clique no ícone para alterá-lo")
+                        .font(Font.custom("Poppins-Regular", size: 10))
+                }
+                .frame(maxWidth: .infinity)
+                .onTapGesture {
+                    showIconPicker = true
+                }
+                .sheet(isPresented: $showIconPicker) {
+                    IconPickerView(
+                        selectedIcon: $iconName,
+                        isPresented: $showIconPicker
+                    )
+                    .presentationDetents([.fraction(0.4)])
+                    .presentationDragIndicator(.visible)
+                }
+            }
+            .listRowBackground(Color.clear)
             
-            Form {
-                Section {
-                    VStack(spacing: 2) {
-                        Text(iconName)
-                            .font(.system(size: 60))
-                        
-                        Text("Clique no ícone para alterá-lo")
-                            .font(Font.custom("Poppins-Regular", size: 10))
-                    }
-                    .frame(maxWidth: .infinity)
-                    .onTapGesture {
-                        showIconPicker = true
-                    }
-                    .sheet(isPresented: $showIconPicker) {
-                        IconPickerView(
-                            selectedIcon: $iconName,
-                            isPresented: $showIconPicker
-                        )
-                        .presentationDetents([.fraction(0.4)])
-                        .presentationDragIndicator(.visible)
+            Section {
+                TextField("Nome do hábito", text: $nome)
+                    .font(Font.custom("Poppins-Regular", size: 14))
+                    .padding(.vertical, 10)
+                    .overlay(
+                        Rectangle()
+                            .frame(height: 1.8)
+                            .foregroundColor(.fontSoft)
+                            .padding(.top, 40),
+                        alignment: .bottom
+                    )
+                    .padding(.bottom, 12)
+            }
+            
+            Section {
+                DatePicker(
+                    "Data de início",
+                    selection: $dataInicio,
+                    displayedComponents: [.date]
+                )
+                .font(Font.custom("Poppins-Regular", size: 14))
+                .foregroundColor(.fontSoft)
+                .padding(.vertical, 10)
+            }
+            
+            Section {
+                TaskCycleCardView(
+                    selectedCycle: $selectedCycle,
+                    selectedDays: $selectedDays
+                )
+                .padding()
+            }
+            
+            Section {
+                LazyHGrid(rows: [GridItem(.fixed(40), spacing: 20)], spacing: 20) {
+                    ForEach(predefinedColors, id: \.self) { color in
+                        ColorCircleSelector(
+                            color: color,
+                            isSelected: cor == color
+                        ) {
+                            cor = color
+                        }
                     }
                 }
-                .listRowBackground(Color.white.opacity(0.001))
-                
-                Section {
-                    TextField("Nome do hábito", text: $nome)
+                .frame(maxWidth: .infinity)
+                .padding()
+            }
+            .listRowBackground(Color.clear)
+            
+            Section {
+                Toggle(isOn: $notificationsEnabled) {
+                    Text("Habilitar Notificações")
                         .font(Font.custom("Poppins-Regular", size: 14))
-                        .padding(.vertical, 10)
-                        .overlay(
-                            Rectangle()
-                                .frame(height: 1.8)
-                                .foregroundColor(.fontSoft)
-                                .padding(.top, 40),
-                            alignment: .bottom
-                        )
-                        .padding(.bottom, 12)
+                        .foregroundColor(.fontSoft)
+                }
+                .onChange(of: notificationsEnabled) { oldValue, newValue in
+                    if newValue {
+                        UNUserNotificationCenter.current().getNotificationSettings { settings in
+                            if settings.authorizationStatus != .authorized {
+                                UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { _, _ in }
+                            }
+                        }
+                    }
                 }
                 
-                Section {
+                if notificationsEnabled {
                     DatePicker(
-                        "Data de início",
-                        selection: $dataInicio,
-                        displayedComponents: [.date]
+                        "Horário da Notificação",
+                        selection: $notificationTime,
+                        displayedComponents: [.hourAndMinute]
                     )
                     .font(Font.custom("Poppins-Regular", size: 14))
                     .foregroundColor(.fontSoft)
-                    .padding(.vertical, 10)
                 }
-                
-                Section {
-                    TaskCycleCardView(
-                        selectedCycle: $selectedCycle,
-                        selectedDays: $selectedDays
-                    )
-                    .padding()
-                }
-                
-                Section {
-                    LazyHGrid(rows: [GridItem(.fixed(40), spacing: 20)], spacing: 20) {
-                        ForEach(predefinedColors, id: \.self) { color in
-                            ColorCircleSelector(
-                                color: color,
-                                isSelected: cor == color
-                            ) {
-                                cor = color
-                            }
-                        }
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                }
-                .listRowBackground(Color.white.opacity(0.001))
-                
-                Section {
-                    Toggle(isOn: $notificationsEnabled) {
-                        Text("Habilitar Notificações")
-                            .font(Font.custom("Poppins-Regular", size: 14))
-                            .foregroundColor(.fontSoft)
-                    }
-                    .onChange(of: notificationsEnabled) { oldValue, newValue in
-                        if newValue {
-                            UNUserNotificationCenter.current().getNotificationSettings { settings in
-                                if settings.authorizationStatus != .authorized {
-                                    UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { _, _ in }
-                                }
-                            }
-                        }
-                    }
-                    
-                    if notificationsEnabled {
-                        DatePicker(
-                            "Horário da Notificação",
-                            selection: $notificationTime,
-                            displayedComponents: [.hourAndMinute]
-                        )
-                        .font(Font.custom("Poppins-Regular", size: 14))
-                        .foregroundColor(.fontSoft)
-                    }
-                }
-                
+            }
+            
+            Section {
                 Button(action: addOrUpdateHabit) {
                     Text(isEdit ? "Salvar" : "Adicionar")
                         .frame(maxWidth: .infinity)
-                        .foregroundStyle(.fontSoft)
                 }
+                .buttonStyle(.glassProminent)
+                .tint(LiquidGlassStyle.brandTint)
                 .disabled(nome.isEmpty)
             }
+            .listRowBackground(Color.clear)
         }
         .scrollContentBackground(.hidden)
+        .toolbarBackground(.hidden, for: .navigationBar)
     }
     
     private func addOrUpdateHabit() {

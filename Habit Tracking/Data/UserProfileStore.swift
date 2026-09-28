@@ -2,10 +2,7 @@ import SwiftUI
 
 class UserProfileStore: ObservableObject {
     @Published var user: User = User(id: UUID(), name: "Click para alterar", avatar: "no-avatar")
-    @Published var medals: [Medal] = [
-            Medal(id: UUID(), name: "Iniciante", description: "Complete 1 hábito", icon: "star.fill", unlockCondition: "Complete 1 hábito", criteria: .habitsQuantity(1)),
-            Medal(id: UUID(), name: "Progresso", description: "Complete 10 hábitos", icon: "trophy.fill", unlockCondition: "Complete 10 hábitos", criteria: .habitsQuantity(10))
-        ]
+    @Published var medals: [Medal] = MedalCatalog.all
     @Published var userMedals: [UserMedal] = []
     @Published var habits: [Habit] = []
     private let userKey = "userKey"
@@ -44,6 +41,7 @@ class UserProfileStore: ObservableObject {
     }
 
     func addMedalToUser(medal: Medal) {
+        guard !userMedals.contains(where: { $0.medalID == medal.id }) else { return }
         let userMedal = UserMedal(id: UUID(), medalID: medal.id, userID: user.id, unlockedDate: Date())
         userMedals.append(userMedal)
         saveUser()
@@ -56,12 +54,10 @@ class UserProfileStore: ObservableObject {
     func createdHabitsCount() -> Int {
         habits.count
     }
-    
-    
+
     func getMedalsStatus() -> [MedalStatus] {
-        return medals.map { medal in
-            let isUnlocked = validateMedal(medal)
-            return MedalStatus(medal: medal, isUnlocked: isUnlocked)
+        medals.map { medal in
+            MedalStatus(medal: medal, isUnlocked: validateMedal(medal))
         }
     }
 
@@ -69,16 +65,30 @@ class UserProfileStore: ObservableObject {
         switch medal.criteria {
         case .habitsQuantity(let quantity):
             return completedHabitsCount() >= quantity
-        case .custom(_):
+        case .habitsCreated(let quantity):
+            return createdHabitsCount() >= quantity
+        case .totalCompletions, .activityStreak, .perfectDays, .distinctColors, .weekendWarrior:
+            return false
+        case .custom:
             return false
         }
     }
     
     /// Retorna uma lista de medalhas com status habilitado/desabilitado
     func getMedalsStatus(habitDataStore: HabitDataStore) -> [MedalStatus] {
-        return medals.map { medal in
-            let isUnlocked = validateMedal(medal, habitDataStore: habitDataStore)
-            return MedalStatus(medal: medal, isUnlocked: isUnlocked)
+        medals.map { medal in
+            MedalStatus(
+                medal: medal,
+                isUnlocked: validateMedal(medal, habitDataStore: habitDataStore)
+            )
+        }
+    }
+
+    func getMedalsStatusByCategory(habitDataStore: HabitDataStore) -> [(category: MedalCategory, medals: [MedalStatus])] {
+        let statuses = getMedalsStatus(habitDataStore: habitDataStore)
+        return MedalCategory.allCases.compactMap { category in
+            let items = statuses.filter { $0.medal.category == category }
+            return items.isEmpty ? nil : (category, items)
         }
     }
 
@@ -87,8 +97,19 @@ class UserProfileStore: ObservableObject {
         switch medal.criteria {
         case .habitsQuantity(let quantity):
             return habitDataStore.completedHabitsCount() >= quantity
-        case .custom(_):
-            // Regras customizadas podem ser adicionadas aqui no futuro
+        case .habitsCreated(let quantity):
+            return habitDataStore.createdHabitsCount() >= quantity
+        case .totalCompletions(let quantity):
+            return habitDataStore.totalCompletionsCount() >= quantity
+        case .activityStreak(let days):
+            return habitDataStore.activityStreakDays() >= days
+        case .perfectDays(let days):
+            return habitDataStore.perfectDaysCount() >= days
+        case .distinctColors(let quantity):
+            return habitDataStore.distinctColorsCount() >= quantity
+        case .weekendWarrior:
+            return habitDataStore.hasWeekendWarriorCompletions()
+        case .custom:
             return false
         }
     }

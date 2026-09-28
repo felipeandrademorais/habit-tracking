@@ -7,45 +7,44 @@ struct WatchHabitRowView: View {
 
     var body: some View {
         HStack {
-            // Ícone do hábito
             Text(habit.icon)
                 .font(.title3)
                 .padding(.trailing, 4)
 
-            // Nome do hábito
             VStack(alignment: .leading) {
                 Text(habit.nome)
                     .font(.system(.body, design: .rounded))
-                    .foregroundColor(isCompletedOnSelectedDate ? .gray : .white)
-                    .strikethrough(isCompletedOnSelectedDate, color: .gray)
+                    .foregroundColor(isCompletedOnSelectedDate ? .secondary : .primary)
+                    .strikethrough(isCompletedOnSelectedDate, color: .secondary)
             }
 
             Spacer()
 
-            // Botão de check
             Button(action: { toggleCompletion(habit) }) {
                 Image(systemName: isCompletedOnSelectedDate
                         ? "checkmark.circle.fill"
                         : "circle")
-                    .foregroundColor(isCompletedOnSelectedDate ? .green : .white)
+                    .font(.title3)
             }
-            .buttonStyle(PlainButtonStyle())
+            .buttonStyle(.glass)
+            .tint(isCompletedOnSelectedDate ? .green : Color(red: 0.67, green: 0.34, blue: 0.72))
+            .buttonBorderShape(.circle)
         }
-        .padding(8)
+        .padding(.vertical, 4)
+        .padding(.horizontal, 4)
+        // Pastel content fill — identity stays in the content layer, not glass-on-glass.
         .background(
-            isCompletedOnSelectedDate
-            ? Color(habit.cor).opacity(0.2)
-            : Color(habit.cor).opacity(0.7)
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .fill(
+                    Color(habit.cor).opacity(isCompletedOnSelectedDate ? 0.25 : 0.75)
+                )
         )
-        .cornerRadius(8)
     }
 
-    // Computed property para verificar se foi concluído no dia selecionado
     private var isCompletedOnSelectedDate: Bool {
         habit.isCompleted(on: selectedDate)
     }
 
-    // Lógica de toggle (igual no iOS)
     private func toggleCompletion(_ habit: Habit) {
         var updatedHabit = habit
         let day = Calendar.current.startOfDay(for: selectedDate)

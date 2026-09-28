@@ -19,6 +19,7 @@ struct UserProfileView: View {
                     }
                     .padding()
                 }
+                .scrollEdgeEffectStyle(.soft, for: .bottom)
             }
         }
         .sheet(isPresented: $showEditNameModal) {

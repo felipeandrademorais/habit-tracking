@@ -20,23 +20,31 @@ struct MetaFlowApp: App {
 }
 
 struct ContentView: View {
+    @State private var selectedTab: String = "habits"
+
     var body: some View {
-        CustomTabBarContainer(tabs: [
-            TabItem(tag: "calendar", icon: "calendar", content: AnyView(CalendarView())),
-            TabItem(tag: "habits", icon: "checklist.checked", content: AnyView(HabitsTodayView())),
-            TabItem(tag: "profile", icon: "person", content: AnyView(UserProfileView()))
-        ]){
-            CalendarView()
+        TabView(selection: $selectedTab) {
+            Tab("Calendário", systemImage: "calendar", value: "calendar") {
+                CalendarView()
+            }
+
+            Tab("Hábitos", systemImage: "checklist.checked", value: "habits") {
+                HabitsTodayView()
+            }
+
+            Tab("Perfil", systemImage: "person", value: "profile") {
+                UserProfileView()
+            }
         }
+        .tint(LiquidGlassStyle.brandTint)
+        .tabBarMinimizeBehavior(.onScrollDown)
     }
-    
 }
 
 //Preview
 struct MetaFlowApp_Previews: PreviewProvider {
     static var previews: some View {
-
-        return ContentView()
+        ContentView()
             .environmentObject(HabitDataStore.sampleDataStore)
     }
 }

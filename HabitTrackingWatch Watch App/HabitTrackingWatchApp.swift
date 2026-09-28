@@ -9,9 +9,16 @@ import SwiftUI
 
 @main
 struct HabitTrackingWatch_Watch_AppApp: App {
+    @StateObject private var dataStore = HabitDataStore()
+    @StateObject private var watchConnector = WatchConnector()
+
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            WatchHabitsTodayView()
+                .environmentObject(dataStore)
+                .onAppear {
+                    watchConnector.habitDataStore = dataStore
+                }
         }
     }
 }

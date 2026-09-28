@@ -2,11 +2,19 @@ import SwiftUI
 
 class HabitDataStore: ObservableObject {
     @Published var habits: [Habit] = []
+    /// Shared selection used by the month calendar and the habits week strip.
+    @Published var selectedDate: Date = Calendar.current.startOfDay(for: Date())
     
     private let habitsKey = "habitsKey"
 
     init() {
         loadHabits()
+    }
+
+    func selectDate(_ date: Date) {
+        let day = Calendar.current.startOfDay(for: date)
+        guard !Calendar.current.isDate(selectedDate, inSameDayAs: day) else { return }
+        selectedDate = day
     }
 
     func loadHabits() {
@@ -127,40 +135,133 @@ class HabitDataStore: ObservableObject {
     func completedHabitsCount() -> Int {
         return habits.filter { !$0.datesCompleted.isEmpty }.count
     }
-    
-    func getCompletionRateForDate(_ date: Date) -> Double {
-        let startOfSelectedDate = Calendar.current.startOfDay(for: date)
-        
-        let activeHabits = habits.filter {
-            Calendar.current.startOfDay(for: $0.dataInicio) <= startOfSelectedDate
-            && $0.diasDoHabito.contains(Calendar.current.component(.weekday, from: startOfSelectedDate))
+
+    func totalCompletionsCount() -> Int {
+        habits.reduce(0) { $0 + $1.datesCompleted.count }
+    }
+
+    func distinctColorsCount() -> Int {
+        Set(habits.map(\.cor)).count
+    }
+
+    func completions(on date: Date) -> Int {
+        habits.reduce(0) { partial, habit in
+            partial + (habit.isCompleted(on: date) ? 1 : 0)
         }
-        
+    }
+
+    /// Consecutive days ending today (or yesterday if today is still empty) with ≥1 check-in.
+    func activityStreakDays() -> Int {
+        let calendar = Calendar.current
+        var day = calendar.startOfDay(for: Date())
+        var streak = 0
+
+        if completions(on: day) == 0 {
+            guard let yesterday = calendar.date(byAdding: .day, value: -1, to: day) else { return 0 }
+            day = yesterday
+        }
+
+        while completions(on: day) > 0 {
+            streak += 1
+            guard let previous = calendar.date(byAdding: .day, value: -1, to: day) else { break }
+            day = previous
+        }
+
+        return streak
+    }
+
+    /// Days where every scheduled habit was completed.
+    func perfectDaysCount() -> Int {
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        guard let earliest = habits.map({ calendar.startOfDay(for: $0.dataInicio) }).min() else {
+            return 0
+        }
+
+        var count = 0
+        var day = earliest
+        while day <= today {
+            let scheduled = habits(for: day)
+            if !scheduled.isEmpty && scheduled.allSatisfy({ $0.isCompleted(on: day) }) {
+                count += 1
+            }
+            guard let next = calendar.date(byAdding: .day, value: 1, to: day) else { break }
+            day = next
+        }
+        return count
+    }
+
+    /// True when the user has completed habits on both a Saturday and a Sunday.
+    func hasWeekendWarriorCompletions() -> Bool {
+        let calendar = Calendar.current
+        var hasSaturday = false
+        var hasSunday = false
+
+        for habit in habits {
+            for date in habit.datesCompleted {
+                switch calendar.component(.weekday, from: date) {
+                case 1: hasSunday = true
+                case 7: hasSaturday = true
+                default: break
+                }
+                if hasSaturday && hasSunday { return true }
+            }
+        }
+
+        return false
+    }
+    
+    /// Completion ratio for habits scheduled on `date` (0...1).
+    /// Example: 2 of 10 completed → `0.2`.
+    func getCompletionRateForDate(_ date: Date) -> Double {
+        let activeHabits = habits(for: date)
         let totalHabits = activeHabits.count
+        guard totalHabits > 0 else { return 0 }
+
         let completedHabits = activeHabits.filter { $0.isCompleted(on: date) }.count
-        
-        return totalHabits > 0 ? Double(completedHabits) / Double(totalHabits) : 0.001
+        return Double(completedHabits) / Double(totalHabits)
     }
 }
 
 extension HabitDataStore {
     static var sampleDataStore: HabitDataStore {
         let store = HabitDataStore()
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        let startOfYear = calendar.date(from: DateComponents(
+            year: calendar.component(.year, from: today),
+            month: 1,
+            day: 1
+        )) ?? today
+
+        var partialCompletions: [Date] = []
+        var fullCompletions: [Date] = []
+        for offset in 0..<40 {
+            guard let date = calendar.date(byAdding: .day, value: -offset, to: today),
+                  date >= startOfYear else { continue }
+            if offset % 3 == 0 {
+                fullCompletions.append(date)
+            }
+            if offset % 2 == 0 {
+                partialCompletions.append(date)
+            }
+        }
+
         store.habits = [
             Habit(
                 nome: "Read",
                 cor: "color1",
-                dataInicio: Date().addingTimeInterval(-86400),
+                dataInicio: startOfYear,
                 repeticoes: .daily,
-                datesCompleted: [],
+                datesCompleted: partialCompletions,
                 icon: "⭐️"
             ),
             Habit(
                 nome: "Exercise",
                 cor: "color2",
-                dataInicio: Date(),
+                dataInicio: startOfYear,
                 repeticoes: .daily,
-                datesCompleted: [],
+                datesCompleted: fullCompletions,
                 icon: "🔥"
             )
         ]

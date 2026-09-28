@@ -6,37 +6,37 @@ struct EditNameModalView: View {
     @Environment(\.dismiss) var dismiss
 
     var body: some View {
-        ZStack {
-            Color.color2.ignoresSafeArea()
+        Form {
+            Text("Editar Nome")
+                .font(Font.custom("Poppins-Regular", size: 16))
             
-            Form {
-                Text("Editar Nome")
-                    .font(Font.custom("Poppins-Regular", size: 16))
-                
-                Section {
-                    TextField("Seu nome", text: $newName)
-                        .font(Font.custom("Poppins-Regular", size: 14))
-                        .padding(.vertical, 10)
-                        .overlay(
-                            Rectangle()
-                                .frame(height: 1.8)
-                                .foregroundColor(.blackSoft.opacity(0.4))
-                                .padding(.top, 40),
-                            alignment: .bottom
-                        )
-                        .padding(.bottom, 12)
-                }
-                
+            Section {
+                TextField("Seu nome", text: $newName)
+                    .font(Font.custom("Poppins-Regular", size: 14))
+                    .padding(.vertical, 10)
+                    .overlay(
+                        Rectangle()
+                            .frame(height: 1.8)
+                            .foregroundColor(.blackSoft.opacity(0.4))
+                            .padding(.top, 40),
+                        alignment: .bottom
+                    )
+                    .padding(.bottom, 12)
+            }
+            
+            Section {
                 Button(action: addName) {
                     Text("Confirmar")
                         .frame(maxWidth: .infinity)
-                        .foregroundStyle(.fontSoft)
                 }
+                .buttonStyle(.glassProminent)
+                .tint(LiquidGlassStyle.brandTint)
                 .disabled(newName.isEmpty && newName == profileStore.user.name)
             }
-            .onAppear {
-                newName = profileStore.user.name
-            }
+            .listRowBackground(Color.clear)
+        }
+        .onAppear {
+            newName = profileStore.user.name
         }
         .scrollContentBackground(.hidden)
     }

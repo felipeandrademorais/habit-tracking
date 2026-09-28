@@ -2,7 +2,6 @@ import SwiftUI
 
 struct HabitsTodayView: View {
     @EnvironmentObject var dataStore: HabitDataStore
-    @State private var selectedDate: Date = Date()
     @State private var isShowingAddHabit: Bool = false
     @State private var habitToEdit: Habit? = nil
     @State private var showAnimation: Bool = false
@@ -10,9 +9,7 @@ struct HabitsTodayView: View {
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
             VStack {
-                WeekView(onDaySelected: { date in
-                    selectedDate = date
-                })
+                WeekView(selectedDate: $dataStore.selectedDate)
                 .frame(maxHeight: 95)
                 
                 if (todaysHabits.isEmpty) {
@@ -28,7 +25,7 @@ struct HabitsTodayView: View {
                         ForEach(todaysHabits) { habit in
                             HabitRowView(
                                 habit: habit,
-                                selectedDate: selectedDate
+                                selectedDate: dataStore.selectedDate
                             )
                             .padding(.vertical, 8)
                             .listRowInsets(EdgeInsets())
@@ -68,44 +65,48 @@ struct HabitsTodayView: View {
                     .listStyle(.plain)
                     .listRowSeparator(.hidden)
                     .padding()
+                    .scrollEdgeEffectStyle(.soft, for: .bottom)
                 }
             }
             
-            Button(action: {
-                let impactMed = UIImpactFeedbackGenerator(style: .medium)
-                impactMed.impactOccurred()
-                isShowingAddHabit = true
-            }) {
-                Image(systemName: "plus")
-                    .font(.title)
-                    .foregroundColor(.white)
-                    .padding()
-                    .background(.defaultDark)
-                    .clipShape(Circle())
-                    .shadow(radius: 5)
+            GlassEffectContainer {
+                Button(action: {
+                    let impactMed = UIImpactFeedbackGenerator(style: .medium)
+                    impactMed.impactOccurred()
+                    isShowingAddHabit = true
+                }) {
+                    Image(systemName: "plus")
+                        .font(.title2.weight(.semibold))
+                        .frame(width: LiquidGlassStyle.fabSize, height: LiquidGlassStyle.fabSize)
+                }
+                .buttonStyle(.glassProminent)
+                .buttonBorderShape(.circle)
+                .tint(LiquidGlassStyle.brandTint)
             }
             .padding(.trailing, 20)
-            .padding(.bottom, 60)
+            .padding(.bottom, 24)
             
         }
         // Modal para adicionar novo hábito
         .sheet(isPresented: $isShowingAddHabit) {
-            NavigationView {
-                ModalHabitView(startDate: selectedDate)
+            NavigationStack {
+                ModalHabitView(startDate: dataStore.selectedDate)
                     .environmentObject(dataStore)
             }
+            .presentationDragIndicator(.visible)
         }
         // Modal para editar hábito (disparado ao atribuir um valor a habitToEdit)
         .sheet(item: $habitToEdit) { habit in
-            NavigationView {
+            NavigationStack {
                 ModalHabitView(habit: habit)
                     .environmentObject(dataStore)
             }
+            .presentationDragIndicator(.visible)
         }
     }
     
     private var todaysHabits: [Habit] {
-        dataStore.habits(for: selectedDate)
+        dataStore.habits(for: dataStore.selectedDate)
     }
     
     private func deleteHabits(at offsets: IndexSet) {
