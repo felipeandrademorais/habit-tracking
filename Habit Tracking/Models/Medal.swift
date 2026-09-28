@@ -123,7 +123,7 @@ enum MedalCatalog {
             "22222222-2222-4222-8222-222222222205",
             name: "Arco-Íris",
             description: "Use todas as 5 cores de hábitos",
-            icon: "rainbow",
+            icon: "circle.hexagongrid.fill",
             condition: "5 cores distintas",
             criteria: .distinctColors(5),
             category: .creation
@@ -182,7 +182,7 @@ enum MedalCatalog {
             "33333333-3333-4333-8333-333333333306",
             name: "Guerreiro de Fim de Semana",
             description: "Complete hábitos no sábado e no domingo",
-            icon: "beach.umbrella.fill",
+            icon: "sun.horizon.fill",
             condition: "Check-ins no sábado e domingo",
             criteria: .weekendWarrior,
             category: .consistency
@@ -318,7 +318,7 @@ enum MedalCatalog {
             "55555555-5555-4555-8555-555555555505",
             name: "Brilhante",
             description: "Alcance 10 dias perfeitos",
-            icon: "sparkle",
+            icon: "sparkles",
             condition: "10 dias perfeitos",
             criteria: .perfectDays(10),
             category: .exploration

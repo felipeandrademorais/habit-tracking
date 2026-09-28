@@ -2,7 +2,6 @@ import SwiftUI
 
 struct HabitsTodayView: View {
     @EnvironmentObject var dataStore: HabitDataStore
-    @State private var selectedDate: Date = Date()
     @State private var isShowingAddHabit: Bool = false
     @State private var habitToEdit: Habit? = nil
     @State private var showAnimation: Bool = false
@@ -10,9 +9,7 @@ struct HabitsTodayView: View {
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
             VStack {
-                WeekView(onDaySelected: { date in
-                    selectedDate = date
-                })
+                WeekView(selectedDate: $dataStore.selectedDate)
                 .frame(maxHeight: 95)
                 
                 if (todaysHabits.isEmpty) {
@@ -28,7 +25,7 @@ struct HabitsTodayView: View {
                         ForEach(todaysHabits) { habit in
                             HabitRowView(
                                 habit: habit,
-                                selectedDate: selectedDate
+                                selectedDate: dataStore.selectedDate
                             )
                             .padding(.vertical, 8)
                             .listRowInsets(EdgeInsets())
@@ -93,7 +90,7 @@ struct HabitsTodayView: View {
         // Modal para adicionar novo hábito
         .sheet(isPresented: $isShowingAddHabit) {
             NavigationStack {
-                ModalHabitView(startDate: selectedDate)
+                ModalHabitView(startDate: dataStore.selectedDate)
                     .environmentObject(dataStore)
             }
             .presentationDragIndicator(.visible)
@@ -109,7 +106,7 @@ struct HabitsTodayView: View {
     }
     
     private var todaysHabits: [Habit] {
-        dataStore.habits(for: selectedDate)
+        dataStore.habits(for: dataStore.selectedDate)
     }
     
     private func deleteHabits(at offsets: IndexSet) {

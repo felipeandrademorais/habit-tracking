@@ -2,11 +2,19 @@ import SwiftUI
 
 class HabitDataStore: ObservableObject {
     @Published var habits: [Habit] = []
+    /// Shared selection used by the month calendar and the habits week strip.
+    @Published var selectedDate: Date = Calendar.current.startOfDay(for: Date())
     
     private let habitsKey = "habitsKey"
 
     init() {
         loadHabits()
+    }
+
+    func selectDate(_ date: Date) {
+        let day = Calendar.current.startOfDay(for: date)
+        guard !Calendar.current.isDate(selectedDate, inSameDayAs: day) else { return }
+        selectedDate = day
     }
 
     func loadHabits() {
