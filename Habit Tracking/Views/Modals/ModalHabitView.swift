@@ -1,4 +1,5 @@
 import SwiftUI
+import UserNotifications
 
 struct ModalHabitView: View {
     @EnvironmentObject var dataStore: HabitDataStore
