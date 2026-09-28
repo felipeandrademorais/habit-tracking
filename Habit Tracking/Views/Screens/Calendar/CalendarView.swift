@@ -20,6 +20,7 @@ struct CalendarView: View {
         }
         .padding()
         .background(Color.blueSoft)
+        .scrollEdgeEffectStyle(.soft, for: .bottom)
     }
 }
 

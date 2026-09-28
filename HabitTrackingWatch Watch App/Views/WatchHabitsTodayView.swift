@@ -5,35 +5,35 @@
 //  Created by Felipe Morais on 23/01/25.
 //
 
-
 import SwiftUI
 
 struct WatchHabitsTodayView: View {
     @EnvironmentObject var dataStore: HabitDataStore
-    // Poderíamos deixar fixo ou criar um datePicker, mas no Watch
-    // costuma-se simplificar para "hoje" mesmo.
     private let currentDate = Date()
 
     var body: some View {
-        VStack {
-            Text("Hábitos de Hoje")
-                .font(.headline)
-                .padding(.top, 8)
-
-            if todaysHabits.isEmpty {
-                Text("Nenhum hábito para hoje.")
-                    .font(.footnote)
-                    .padding()
-            } else {
-                // No watchOS, List funciona de forma parecida com iOS
-                List(todaysHabits) { habit in
-                    // Usamos uma versão adaptada do row
-                    WatchHabitRowView(
-                        habit: habit,
-                        selectedDate: currentDate
+        NavigationStack {
+            Group {
+                if todaysHabits.isEmpty {
+                    ContentUnavailableView(
+                        "Nenhum hábito para hoje.",
+                        systemImage: "checklist",
+                        description: Text("Os hábitos do iPhone aparecem aqui.")
                     )
+                } else {
+                    List(todaysHabits) { habit in
+                        WatchHabitRowView(
+                            habit: habit,
+                            selectedDate: currentDate
+                        )
+                        .listRowBackground(Color.clear)
+                    }
+                    .listStyle(.carousel)
+                    .scrollEdgeEffectStyle(.soft, for: .bottom)
                 }
             }
+            .navigationTitle("Hoje")
+            .toolbarBackground(.hidden, for: .navigationBar)
         }
     }
 
@@ -44,7 +44,6 @@ struct WatchHabitsTodayView: View {
 
 struct WatchHabitsTodayView_Previews: PreviewProvider {
     static var previews: some View {
-        // Exemplo de preview, usando dados fictícios
         let dataStore = HabitDataStore.sampleDataStore
         return WatchHabitsTodayView()
             .environmentObject(dataStore)

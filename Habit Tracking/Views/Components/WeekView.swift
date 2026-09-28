@@ -57,10 +57,15 @@ struct WeekView: View {
                             }
                         }
                         .padding(8)
-                        .background(
-                            isSelected(day) ? .capsulePrimary : .capsuleSecundary
-                        )
-                        .cornerRadius(12)
+                        .background {
+                            if isSelected(day) {
+                                Color.clear
+                                    .habitGlassChip(tint: LiquidGlassStyle.primaryCapsuleTint)
+                            } else {
+                                RoundedRectangle(cornerRadius: LiquidGlassStyle.cardCornerRadius)
+                                    .fill(Color.capsuleSecundary)
+                            }
+                        }
                         .onTapGesture {
                             selectedDate = day
                             onDaySelected(day)

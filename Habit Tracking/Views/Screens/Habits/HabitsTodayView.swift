@@ -68,39 +68,43 @@ struct HabitsTodayView: View {
                     .listStyle(.plain)
                     .listRowSeparator(.hidden)
                     .padding()
+                    .scrollEdgeEffectStyle(.soft, for: .bottom)
                 }
             }
             
-            Button(action: {
-                let impactMed = UIImpactFeedbackGenerator(style: .medium)
-                impactMed.impactOccurred()
-                isShowingAddHabit = true
-            }) {
-                Image(systemName: "plus")
-                    .font(.title)
-                    .foregroundColor(.white)
-                    .padding()
-                    .background(.defaultDark)
-                    .clipShape(Circle())
-                    .shadow(radius: 5)
+            GlassEffectContainer {
+                Button(action: {
+                    let impactMed = UIImpactFeedbackGenerator(style: .medium)
+                    impactMed.impactOccurred()
+                    isShowingAddHabit = true
+                }) {
+                    Image(systemName: "plus")
+                        .font(.title2.weight(.semibold))
+                        .frame(width: LiquidGlassStyle.fabSize, height: LiquidGlassStyle.fabSize)
+                }
+                .buttonStyle(.glassProminent)
+                .buttonBorderShape(.circle)
+                .tint(LiquidGlassStyle.brandTint)
             }
             .padding(.trailing, 20)
-            .padding(.bottom, 60)
+            .padding(.bottom, 24)
             
         }
         // Modal para adicionar novo hábito
         .sheet(isPresented: $isShowingAddHabit) {
-            NavigationView {
+            NavigationStack {
                 ModalHabitView(startDate: selectedDate)
                     .environmentObject(dataStore)
             }
+            .presentationDragIndicator(.visible)
         }
         // Modal para editar hábito (disparado ao atribuir um valor a habitToEdit)
         .sheet(item: $habitToEdit) { habit in
-            NavigationView {
+            NavigationStack {
                 ModalHabitView(habit: habit)
                     .environmentObject(dataStore)
             }
+            .presentationDragIndicator(.visible)
         }
     }
     

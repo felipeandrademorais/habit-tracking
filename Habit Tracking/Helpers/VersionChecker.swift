@@ -88,8 +88,8 @@ struct UpdateAlertView: View {
         ZStack {
             // Se isUpdateAvailable for true, exibe o overlay
             if versionChecker.isUpdateAvailable {
-                Color.black.opacity(0.4)
-                    .edgesIgnoringSafeArea(.all)
+                Color.black.opacity(0.35)
+                    .ignoresSafeArea()
                 
                 VStack(spacing: 20) {
                     Text("Nova versão disponível")
@@ -108,18 +108,16 @@ struct UpdateAlertView: View {
                     }) {
                         Text("Atualizar agora")
                             .font(.custom("Poppins-Regular", size: 14))
-                            .foregroundColor(.white)
                             .bold()
-                            .padding()
                             .frame(maxWidth: .infinity)
-                            .background(Color.default)
-                            .cornerRadius(10)
+                            .padding(.vertical, 4)
                     }
+                    .buttonStyle(.glassProminent)
+                    .tint(LiquidGlassStyle.brandTint)
                     .padding(.horizontal)
                 }
                 .padding()
-                .background(Color.white)
-                .cornerRadius(15)
+                .habitGlassPanel(cornerRadius: LiquidGlassStyle.alertCornerRadius)
                 .padding(.horizontal, 40)
             }
         }

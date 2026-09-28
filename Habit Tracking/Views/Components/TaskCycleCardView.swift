@@ -11,7 +11,7 @@ struct TaskCycleCardView: View {
                 .foregroundColor(.fontSoft)
 
             ZStack(alignment: .leading) {
-                RoundedRectangle(cornerRadius: 20)
+                RoundedRectangle(cornerRadius: LiquidGlassStyle.chromeCornerRadius)
                     .fill(Color.grayLigth)
                     .frame(height: 40)
 
@@ -19,9 +19,12 @@ struct TaskCycleCardView: View {
                     let segmentWidth = geometry.size.width / CGFloat(Repeticao.allCases.count)
                     let index = Repeticao.allCases.firstIndex(of: selectedCycle) ?? 0
 
-                    RoundedRectangle(cornerRadius: 20)
-                        .fill(Color.color3)
+                    Color.clear
                         .frame(width: segmentWidth, height: 40)
+                        .glassEffect(
+                            .regular.tint(Color.color3).interactive(),
+                            in: .rect(cornerRadius: LiquidGlassStyle.chromeCornerRadius)
+                        )
                         .offset(x: segmentWidth * CGFloat(index))
                         .animation(.spring(), value: selectedCycle)
                 }
@@ -47,6 +50,7 @@ struct TaskCycleCardView: View {
 
             HStack(spacing: 12) {
                 ForEach(WeekDayHelper.localizedWeekdays(), id: \.dayNumber) { day in
+                    let isSelected = selectedDays.contains(day.dayNumber)
                     Button(action: {
                         let impactMed = UIImpactFeedbackGenerator(style: .medium)
                         impactMed.impactOccurred()
@@ -55,11 +59,14 @@ struct TaskCycleCardView: View {
                         Text(day.dayName.capitalized)
                             .font(Font.custom("Poppins-Regular", size: 10))
                             .frame(width: 32, height: 32)
-                            .background(
-                                selectedDays.contains(day.dayNumber) ? Color.color3 : Color.grayLigth
-                            )
                             .foregroundColor(.black)
-                            .clipShape(Circle())
+                            .background {
+                                if isSelected {
+                                    Color.clear.habitGlassCircle(tint: .color3)
+                                } else {
+                                    Circle().fill(Color.grayLigth)
+                                }
+                            }
                     }
                 }
             }

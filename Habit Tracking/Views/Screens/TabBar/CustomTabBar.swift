@@ -1,5 +1,7 @@
 import SwiftUI
 
+/// Legacy floating tab bar kept for previews/reference.
+/// Production navigation uses the system `TabView` Liquid Glass chrome in `ContentView`.
 struct CustomTabBar: View {
     @Binding var selectedTab: String
     let tabs: [TabItem]
@@ -20,18 +22,14 @@ struct CustomTabBar: View {
                                 .resizable()
                                 .scaledToFit()
                                 .frame(height: 22)
-                                .foregroundColor(selectedTab == tab.tag ? Color.defaultDark : .fontSoft)
+                                .foregroundColor(selectedTab == tab.tag ? LiquidGlassStyle.brandTint : .fontSoft)
                         }
                         .frame(maxWidth: .infinity)
                     }
                 }
             }
             .frame(height: 100)
-            .background(
-                RoundedRectangle(cornerRadius: 20)
-                    .fill(.calendarBackground)
-                    .shadow(color: Color.black.opacity(0.2), radius: 6, x: 0, y: -8)
-            )
+            .habitGlassPanel(cornerRadius: LiquidGlassStyle.chromeCornerRadius)
         }
         .zIndex(100)
     }
