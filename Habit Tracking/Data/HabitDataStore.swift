@@ -127,6 +127,81 @@ class HabitDataStore: ObservableObject {
     func completedHabitsCount() -> Int {
         return habits.filter { !$0.datesCompleted.isEmpty }.count
     }
+
+    func totalCompletionsCount() -> Int {
+        habits.reduce(0) { $0 + $1.datesCompleted.count }
+    }
+
+    func distinctColorsCount() -> Int {
+        Set(habits.map(\.cor)).count
+    }
+
+    func completions(on date: Date) -> Int {
+        habits.reduce(0) { partial, habit in
+            partial + (habit.isCompleted(on: date) ? 1 : 0)
+        }
+    }
+
+    /// Consecutive days ending today (or yesterday if today is still empty) with ≥1 check-in.
+    func activityStreakDays() -> Int {
+        let calendar = Calendar.current
+        var day = calendar.startOfDay(for: Date())
+        var streak = 0
+
+        if completions(on: day) == 0 {
+            guard let yesterday = calendar.date(byAdding: .day, value: -1, to: day) else { return 0 }
+            day = yesterday
+        }
+
+        while completions(on: day) > 0 {
+            streak += 1
+            guard let previous = calendar.date(byAdding: .day, value: -1, to: day) else { break }
+            day = previous
+        }
+
+        return streak
+    }
+
+    /// Days where every scheduled habit was completed.
+    func perfectDaysCount() -> Int {
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        guard let earliest = habits.map({ calendar.startOfDay(for: $0.dataInicio) }).min() else {
+            return 0
+        }
+
+        var count = 0
+        var day = earliest
+        while day <= today {
+            let scheduled = habits(for: day)
+            if !scheduled.isEmpty && scheduled.allSatisfy({ $0.isCompleted(on: day) }) {
+                count += 1
+            }
+            guard let next = calendar.date(byAdding: .day, value: 1, to: day) else { break }
+            day = next
+        }
+        return count
+    }
+
+    /// True when the user has completed habits on both a Saturday and a Sunday.
+    func hasWeekendWarriorCompletions() -> Bool {
+        let calendar = Calendar.current
+        var hasSaturday = false
+        var hasSunday = false
+
+        for habit in habits {
+            for date in habit.datesCompleted {
+                switch calendar.component(.weekday, from: date) {
+                case 1: hasSunday = true
+                case 7: hasSaturday = true
+                default: break
+                }
+                if hasSaturday && hasSunday { return true }
+            }
+        }
+
+        return false
+    }
     
     /// Completion ratio for habits scheduled on `date` (0...1).
     /// Example: 2 of 10 completed → `0.2`.
