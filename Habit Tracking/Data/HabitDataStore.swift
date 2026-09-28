@@ -128,39 +128,57 @@ class HabitDataStore: ObservableObject {
         return habits.filter { !$0.datesCompleted.isEmpty }.count
     }
     
+    /// Completion ratio for habits scheduled on `date` (0...1).
+    /// Example: 2 of 10 completed → `0.2`.
     func getCompletionRateForDate(_ date: Date) -> Double {
-        let startOfSelectedDate = Calendar.current.startOfDay(for: date)
-        
-        let activeHabits = habits.filter {
-            Calendar.current.startOfDay(for: $0.dataInicio) <= startOfSelectedDate
-            && $0.diasDoHabito.contains(Calendar.current.component(.weekday, from: startOfSelectedDate))
-        }
-        
+        let activeHabits = habits(for: date)
         let totalHabits = activeHabits.count
+        guard totalHabits > 0 else { return 0 }
+
         let completedHabits = activeHabits.filter { $0.isCompleted(on: date) }.count
-        
-        return totalHabits > 0 ? Double(completedHabits) / Double(totalHabits) : 0.001
+        return Double(completedHabits) / Double(totalHabits)
     }
 }
 
 extension HabitDataStore {
     static var sampleDataStore: HabitDataStore {
         let store = HabitDataStore()
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        let startOfYear = calendar.date(from: DateComponents(
+            year: calendar.component(.year, from: today),
+            month: 1,
+            day: 1
+        )) ?? today
+
+        var partialCompletions: [Date] = []
+        var fullCompletions: [Date] = []
+        for offset in 0..<40 {
+            guard let date = calendar.date(byAdding: .day, value: -offset, to: today),
+                  date >= startOfYear else { continue }
+            if offset % 3 == 0 {
+                fullCompletions.append(date)
+            }
+            if offset % 2 == 0 {
+                partialCompletions.append(date)
+            }
+        }
+
         store.habits = [
             Habit(
                 nome: "Read",
                 cor: "color1",
-                dataInicio: Date().addingTimeInterval(-86400),
+                dataInicio: startOfYear,
                 repeticoes: .daily,
-                datesCompleted: [],
+                datesCompleted: partialCompletions,
                 icon: "⭐️"
             ),
             Habit(
                 nome: "Exercise",
                 cor: "color2",
-                dataInicio: Date(),
+                dataInicio: startOfYear,
                 repeticoes: .daily,
-                datesCompleted: [],
+                datesCompleted: fullCompletions,
                 icon: "🔥"
             )
         ]
