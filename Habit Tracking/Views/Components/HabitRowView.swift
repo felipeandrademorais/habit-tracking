@@ -3,7 +3,6 @@ import SwiftUI
 struct HabitRowView: View {
     @EnvironmentObject var dataStore: HabitDataStore
     @State private var showAnimation: Bool = false
-    @State private var isPressed: Bool = false
     var habit: Habit
     var selectedDate: Date
     var showCheckbox: Bool = true
@@ -40,7 +39,6 @@ struct HabitRowView: View {
                     Image(systemName: "checkmark.circle.fill")
                         .font(.system(size: 22, weight: .semibold))
                         .foregroundColor(LiquidGlassStyle.brandTint)
-                        .symbolEffect(.bounce, value: isCompletedOnSelectedDate)
                 }
             }
             .padding(.horizontal, 14)
@@ -55,8 +53,6 @@ struct HabitRowView: View {
                     .stroke(Color.white.opacity(0.55), lineWidth: 1)
             )
             .shadow(color: AppTheme.softShadow, radius: isCompletedOnSelectedDate ? 2 : 8, x: 0, y: 3)
-            .scaleEffect(isPressed ? 0.98 : 1)
-            .animation(AppTheme.snappySpring, value: isPressed)
             .animation(AppTheme.softSpring, value: isCompletedOnSelectedDate)
             .overlay(alignment: .trailing) {
                 if showAnimation {
@@ -101,11 +97,6 @@ struct HabitRowView: View {
                 .contentTransition(.symbolEffect(.replace))
         }
         .buttonStyle(PlainButtonStyle())
-        .simultaneousGesture(
-            DragGesture(minimumDistance: 0)
-                .onChanged { _ in isPressed = true }
-                .onEnded { _ in isPressed = false }
-        )
     }
 
     private var isCompletedOnSelectedDate: Bool {
