@@ -9,9 +9,9 @@ struct YearCalendarView: View {
     private let weekdayLabels = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"]
 
     var body: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: 12) {
             Text("Atividade Anual")
-                .font(.custom("Poppins-SemiBold", size: 16))
+                .font(AppTheme.headline(16))
                 .foregroundColor(.fontSoft)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
@@ -19,8 +19,8 @@ struct YearCalendarView: View {
                 VStack(spacing: cellSpacing) {
                     ForEach(weekdayLabels, id: \.self) { day in
                         Text(day)
-                            .font(.custom("Poppins-Regular", size: 8))
-                            .foregroundColor(.fontSoft)
+                            .font(AppTheme.micro(8))
+                            .foregroundColor(.fontSoft.opacity(0.55))
                             .frame(width: 30, height: cellSize, alignment: .trailing)
                     }
                 }
@@ -38,9 +38,6 @@ struct YearCalendarView: View {
                     .padding(.vertical, 4)
                 }
             }
-            .padding(8)
-            .background(Color.white.opacity(0.05))
-            .cornerRadius(8)
         }
     }
 
@@ -91,8 +88,8 @@ struct YearCalendarView: View {
         return HStack(spacing: 0) {
             ForEach(labels, id: \.weekIndex) { item in
                 Text(item.title)
-                    .font(.custom("Poppins-Regular", size: 9))
-                    .foregroundColor(.fontSoft)
+                    .font(AppTheme.micro(9))
+                    .foregroundColor(.fontSoft.opacity(0.55))
                     .frame(
                         width: CGFloat(item.widthInWeeks) * (cellSize + cellSpacing) - cellSpacing,
                         alignment: .leading

@@ -16,23 +16,50 @@ struct MedalsSectionView: View {
         groupedMedals.flatMap(\.medals).count
     }
 
+    private var progress: Double {
+        guard totalCount > 0 else { return 0 }
+        return Double(unlockedCount) / Double(totalCount)
+    }
+
     var body: some View {
         VStack(spacing: 16) {
-            HStack {
+            HStack(alignment: .center) {
                 Text("Medalhas")
-                    .font(.custom("Poppins-SemiBold", size: 16))
+                    .font(AppTheme.headline(16))
                     .foregroundColor(.fontSoft)
+
                 Spacer()
+
                 Text("\(unlockedCount)/\(totalCount)")
-                    .font(.custom("Poppins-Medium", size: 12))
-                    .foregroundColor(.defaultDark)
+                    .font(AppTheme.body(12))
+                    .foregroundColor(LiquidGlassStyle.brandTint)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 5)
+                    .background(
+                        Capsule()
+                            .fill(LiquidGlassStyle.brandTint.opacity(0.12))
+                    )
             }
+
+            GeometryReader { geo in
+                ZStack(alignment: .leading) {
+                    Capsule()
+                        .fill(Color.gray.opacity(0.12))
+                        .frame(height: 6)
+
+                    Capsule()
+                        .fill(LiquidGlassStyle.brandTint)
+                        .frame(width: max(geo.size.width * progress, progress > 0 ? 8 : 0), height: 6)
+                        .animation(AppTheme.softSpring, value: progress)
+                }
+            }
+            .frame(height: 6)
 
             ForEach(groupedMedals, id: \.category) { group in
                 VStack(alignment: .leading, spacing: 10) {
                     Text(group.category.rawValue)
-                        .font(.custom("Poppins-Medium", size: 13))
-                        .foregroundColor(.fontSoft.opacity(0.8))
+                        .font(AppTheme.body(13))
+                        .foregroundColor(.fontSoft.opacity(0.7))
 
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 12) {
@@ -41,10 +68,11 @@ struct MedalsSectionView: View {
                             }
                         }
                         .padding(.vertical, 2)
+                        .padding(.trailing, 4)
                     }
                 }
             }
         }
-        .padding(.top, 12)
+        .padding(.top, 4)
     }
 }

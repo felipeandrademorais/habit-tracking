@@ -5,20 +5,19 @@ struct CalendarView: View {
     @State private var currentMonth: Date = Date()
 
     var body: some View {
-        VStack() {
-            VStack {
+        VStack(spacing: 16) {
+            VStack(spacing: 12) {
                 headerView
                 daysOfWeekView
                 daysInMonthView
             }
-            .padding()
-            .background(Color.calendarBackground)
-            .cornerRadius(20)
+            .padding(16)
+            .habitSoftSurface()
 
             habitsListView(for: dataStore.selectedDate)
         }
-        .padding()
-        .background(Color.blueSoft)
+        .padding(AppTheme.screenPadding)
+        .habitPageBackground()
         .scrollEdgeEffectStyle(.soft, for: .bottom)
         .onAppear {
             syncMonth(to: dataStore.selectedDate)
@@ -35,30 +34,43 @@ extension CalendarView {
         HStack {
             Button(action: previousMonth) {
                 Image(systemName: "chevron.left")
+                    .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(.fontSoft)
+                    .frame(width: 36, height: 36)
+                    .background(Circle().fill(Color.blueSoft.opacity(0.7)))
             }
+
             Spacer()
-            Text(formattedDate(currentMonth, format: "LLLL"))
-                .font(Font.custom("Poppins-Regular", size: 16))
+
+            VStack(spacing: 2) {
+                Text(formattedDate(currentMonth, format: "LLLL").capitalized)
+                    .font(AppTheme.headline(17))
+                    .foregroundColor(.fontSoft)
+                Text(formattedDate(currentMonth, format: "yyyy"))
+                    .font(AppTheme.caption(12))
+                    .foregroundColor(.fontSoft.opacity(0.55))
+            }
+
             Spacer()
-            Text(formattedDate(currentMonth, format: "yyyy"))
-                .font(Font.custom("Poppins-Regular", size: 12))
+
             Button(action: nextMonth) {
                 Image(systemName: "chevron.right")
+                    .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(.fontSoft)
+                    .frame(width: 36, height: 36)
+                    .background(Circle().fill(Color.blueSoft.opacity(0.7)))
             }
         }
-        .padding()
     }
 
     private var daysOfWeekView: some View {
         let weekDays = Calendar.current.shortWeekdaySymbols
         return LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 7)) {
             ForEach(weekDays, id: \.self) { day in
-                Text(day.capitalized)
-                    .font(Font.custom("Poppins-Thin", size: 12))
+                Text(day.prefix(3).capitalized)
+                    .font(AppTheme.micro(11))
                     .frame(maxWidth: .infinity)
-                    .foregroundColor(.black)
+                    .foregroundColor(.fontSoft.opacity(0.5))
             }
         }
     }
@@ -72,10 +84,13 @@ extension CalendarView {
                         date: date,
                         isSelected: Calendar.current.isDate(dataStore.selectedDate, inSameDayAs: date)
                     ) {
-                        dataStore.selectDate(date)
+                        withAnimation(AppTheme.snappySpring) {
+                            dataStore.selectDate(date)
+                        }
                     }
                 } else {
-                    Spacer()
+                    Color.clear
+                        .frame(minWidth: 40, minHeight: 40)
                 }
             }
         }
@@ -84,19 +99,27 @@ extension CalendarView {
     @ViewBuilder
     private func habitsListView(for date: Date) -> some View {
         let habitsForSelectedDate = dataStore.habits(for: date)
-        VStack(spacing: 20) {
+        VStack(spacing: 14) {
             Text(formattedDate(date, format: "MMMM d, EEEE").capitalized)
-                .font(.headline)
-                .foregroundColor(.fontSoft)
-                .padding(.vertical)
+                .font(AppTheme.body(14))
+                .foregroundColor(.fontSoft.opacity(0.7))
+                .frame(maxWidth: .infinity, alignment: .leading)
 
             if habitsForSelectedDate.isEmpty {
-                Text("Nenhum Hábito para essa data")
-                    .foregroundColor(.fontSoft)
-                    .padding()
+                VStack(spacing: 8) {
+                    Image(systemName: "calendar.badge.minus")
+                        .font(.system(size: 28, weight: .light))
+                        .foregroundColor(.fontSoft.opacity(0.35))
+                    Text("Nenhum hábito para essa data")
+                        .font(AppTheme.caption(13))
+                        .foregroundColor(.fontSoft.opacity(0.55))
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 28)
+                .habitSoftSurface(fill: Color.calendarBackground.opacity(0.7))
             } else {
                 ScrollView {
-                    VStack(alignment: .leading, spacing: 10) {
+                    VStack(alignment: .leading, spacing: AppTheme.rowSpacing) {
                         ForEach(habitsForSelectedDate, id: \.id) { habit in
                             HabitRowView(
                                 habit: habit,
@@ -105,12 +128,12 @@ extension CalendarView {
                             )
                         }
                     }
-                    .padding(.top, 10)
-                    .padding(.bottom, 10)
+                    .padding(.vertical, 4)
+                    .padding(.bottom, 24)
                 }
             }
 
-            Spacer()
+            Spacer(minLength: 0)
         }
     }
 }
@@ -143,13 +166,17 @@ extension CalendarView {
 
     private func previousMonth() {
         if let newMonth = Calendar.current.date(byAdding: .month, value: -1, to: currentMonth) {
-            currentMonth = newMonth
+            withAnimation(AppTheme.softSpring) {
+                currentMonth = newMonth
+            }
         }
     }
 
     private func nextMonth() {
         if let newMonth = Calendar.current.date(byAdding: .month, value: 1, to: currentMonth) {
-            currentMonth = newMonth
+            withAnimation(AppTheme.softSpring) {
+                currentMonth = newMonth
+            }
         }
     }
 
@@ -163,7 +190,7 @@ extension CalendarView {
 
 struct CalendarView_Previews: PreviewProvider {
     static var previews: some View {
-        return CalendarView()
+        CalendarView()
             .environmentObject(HabitDataStore.sampleDataStore)
     }
 }

@@ -91,24 +91,22 @@ struct UpdateAlertView: View {
                 Color.black.opacity(0.35)
                     .ignoresSafeArea()
                 
-                VStack(spacing: 20) {
+                VStack(spacing: 18) {
                     Text("Nova versão disponível")
-                        .font(.custom("Poppins-Regular", size: 18))
+                        .font(AppTheme.title(18))
                         .foregroundColor(.fontSoft)
-                        .bold()
-                    
+
                     Text("Uma nova versão do aplicativo está disponível. Atualize agora para continuar usando o app.")
-                        .font(.custom("Poppins-Regular", size: 14))
-                        .foregroundColor(.fontSoft)
+                        .font(AppTheme.caption(14))
+                        .foregroundColor(.fontSoft.opacity(0.75))
                         .multilineTextAlignment(.center)
                         .padding(.horizontal)
-                    
+
                     Button(action: {
                         versionChecker.openAppStore()
                     }) {
                         Text("Atualizar agora")
-                            .font(.custom("Poppins-Regular", size: 14))
-                            .bold()
+                            .font(AppTheme.body(14))
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 4)
                     }
@@ -116,7 +114,7 @@ struct UpdateAlertView: View {
                     .tint(LiquidGlassStyle.brandTint)
                     .padding(.horizontal)
                 }
-                .padding()
+                .padding(22)
                 .habitGlassPanel(cornerRadius: LiquidGlassStyle.alertCornerRadius)
                 .padding(.horizontal, 40)
             }

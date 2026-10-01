@@ -7,81 +7,106 @@ struct HabitRowView: View {
     var selectedDate: Date
     var showCheckbox: Bool = true
     var onHabitCompleted: ((Bool) -> Void)? = nil
-    
+
     var body: some View {
         ZStack {
-            HStack {
-                Text(habit.icon)
-                    .font(.system(size: 28))
-                    .foregroundColor(.fontSoft)
-                
-                VStack(alignment: .leading) {
+            HStack(spacing: 14) {
+                iconWell
+
+                VStack(alignment: .leading, spacing: 3) {
                     Text(habit.nome)
-                        .font(Font.custom("Poppins-Regular", size: 14))
-                        .strikethrough(
-                            isCompletedOnSelectedDate,
-                            color: .blackSoft
-                        )
-                        .foregroundColor(isCompletedOnSelectedDate ? .fontSoft : .black)
+                        .font(AppTheme.body(15))
+                        .strikethrough(isCompletedOnSelectedDate, color: .blackSoft)
+                        .foregroundColor(isCompletedOnSelectedDate ? .fontSoft.opacity(0.55) : .fontSoft)
+                        .lineLimit(2)
+
+                    if showCheckbox {
+                        Text(isCompletedOnSelectedDate ? "Concluído" : "Pendente")
+                            .font(AppTheme.micro(11))
+                            .foregroundColor(
+                                isCompletedOnSelectedDate
+                                ? LiquidGlassStyle.brandTint
+                                : .fontSoft.opacity(0.45)
+                            )
+                    }
                 }
-                
-                Spacer()
-                
+
+                Spacer(minLength: 8)
+
                 if showCheckbox {
-                    Button(
-                        action: {
-                            let impactMed = UIImpactFeedbackGenerator(style: .medium)
-                            impactMed.impactOccurred()
-                            toggleCompletion(for: habit)
-                        }
-                    ) {
-                        
-                        Image(
-                            systemName: isCompletedOnSelectedDate
-                            ? "checkmark.circle.fill"
-                            : "circle"
-                        )
-                        .font(Font.system(size: 24))
-                        .foregroundColor(isCompletedOnSelectedDate ? .green : .black)
-                    }
-                    .buttonStyle(PlainButtonStyle())
-                } else {
-                    if (isCompletedOnSelectedDate) {
-                        Image(systemName: "checkmark.circle.fill")
-                            .foregroundColor(.green)
-                            .font(Font.system(size: 24))
-                    }
+                    completionButton
+                } else if isCompletedOnSelectedDate {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 22, weight: .semibold))
+                        .foregroundColor(LiquidGlassStyle.brandTint)
                 }
             }
-            .padding(.horizontal, 15)
-            .padding(.vertical, 20)
-            .background(Color(habit.cor))
-            .cornerRadius(12)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 14)
+            .background(
+                RoundedRectangle(cornerRadius: AppTheme.rowCornerRadius, style: .continuous)
+                    .fill(Color(habit.cor))
+                    .opacity(isCompletedOnSelectedDate ? 0.72 : 1)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: AppTheme.rowCornerRadius, style: .continuous)
+                    .stroke(Color.white.opacity(0.55), lineWidth: 1)
+            )
+            .shadow(color: AppTheme.softShadow, radius: isCompletedOnSelectedDate ? 2 : 8, x: 0, y: 3)
+            .animation(AppTheme.softSpring, value: isCompletedOnSelectedDate)
             .overlay(alignment: .trailing) {
                 if showAnimation {
                     LottieView(animationName: "Check.json")
                         .frame(width: 150, height: 150)
                         .offset(x: 45, y: 0)
                         .allowsHitTesting(false)
-                        .transition(.scale)
+                        .transition(.scale.combined(with: .opacity))
                 }
             }
         }
-        .onAppear(){
+        .onAppear {
             if isCompletedOnSelectedDate {
                 showAnimation = false
             }
         }
     }
-    
+
+    private var iconWell: some View {
+        Text(habit.icon)
+            .font(.system(size: 24))
+            .frame(width: AppTheme.iconWellSize, height: AppTheme.iconWellSize)
+            .background(
+                Circle()
+                    .fill(Color.white.opacity(0.55))
+            )
+            .overlay(
+                Circle()
+                    .stroke(Color.white.opacity(0.7), lineWidth: 1)
+            )
+    }
+
+    private var completionButton: some View {
+        Button(action: {
+            let impactMed = UIImpactFeedbackGenerator(style: .medium)
+            impactMed.impactOccurred()
+            toggleCompletion(for: habit)
+        }) {
+            Image(systemName: isCompletedOnSelectedDate ? "checkmark.circle.fill" : "circle")
+                .font(.system(size: 26, weight: .semibold))
+                .foregroundColor(isCompletedOnSelectedDate ? LiquidGlassStyle.brandTint : .fontSoft.opacity(0.35))
+                .contentTransition(.symbolEffect(.replace))
+        }
+        .buttonStyle(PlainButtonStyle())
+    }
+
     private var isCompletedOnSelectedDate: Bool {
         habit.isCompleted(on: selectedDate)
     }
-    
+
     private func toggleCompletion(for habit: Habit) {
         var updatedHabit = habit
         let day = Calendar.current.startOfDay(for: selectedDate)
-        
+
         if isCompletedOnSelectedDate {
             updatedHabit.datesCompleted.removeAll { date in
                 Calendar.current.startOfDay(for: date) == day
@@ -90,12 +115,16 @@ struct HabitRowView: View {
         } else {
             updatedHabit.datesCompleted.append(day)
             onHabitCompleted?(true)
-            showAnimation = true
+            withAnimation(AppTheme.softSpring) {
+                showAnimation = true
+            }
             DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-                showAnimation = false
+                withAnimation(.easeOut(duration: 0.25)) {
+                    showAnimation = false
+                }
             }
         }
-        
+
         dataStore.updateHabit(updatedHabit)
     }
 }
@@ -104,7 +133,7 @@ struct HabitRowView: View {
 struct HabitRowView_Previews: PreviewProvider {
     static var previews: some View {
         let dataStore = HabitDataStore()
-        
+
         let habitExample = Habit(
             nome: "Beber 2L de água",
             cor: "color2",
@@ -113,9 +142,9 @@ struct HabitRowView_Previews: PreviewProvider {
             datesCompleted: [Calendar.current.startOfDay(for: Date())],
             icon: "⭐️"
         )
-        
+
         dataStore.habits = [habitExample]
-        
+
         return HabitRowView(
             habit: habitExample,
             selectedDate: Date()
