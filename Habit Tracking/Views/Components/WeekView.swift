@@ -28,53 +28,26 @@ struct WeekView: View {
 
     var body: some View {
         ZStack(alignment: .top) {
-            Color.color1
-                .opacity(0.6)
-                .ignoresSafeArea(.all)
+            AppTheme.habitsHeaderGradient
+                .ignoresSafeArea(edges: .top)
 
-            VStack(spacing: 8) {
+            VStack(spacing: 10) {
                 Text(monthName(for: currentWeekStart))
-                    .font(Font.custom("Poppins-Medium", size: 14))
-                    .foregroundColor(.fontSoft)
+                    .font(AppTheme.body(13))
+                    .foregroundColor(.fontSoft.opacity(0.75))
+                    .tracking(0.6)
+                    .textCase(.uppercase)
 
-                HStack(spacing: 8) {
+                HStack(spacing: 6) {
                     ForEach(weekDays, id: \.self) { day in
-                        VStack(spacing: 6) {
-                            Text(shortWeekdayName(for: day))
-                                .font(Font.custom("Poppins-Medium", size: 12))
-                                .foregroundColor(.fontSoft)
-                                .fontWeight(isSelected(day) ? .bold : .regular)
-                            ZStack {
-                                Circle()
-                                    .fill(.white)
-                                    .frame(width: 32, height: 32)
-
-                                Text(dayNumber(for: day))
-                                    .font(Font.custom("Poppins-Medium", size: 12))
-                                    .foregroundColor(.black)
-                                    .fontWeight(isSelected(day) ? .bold : .regular)
-                            }
-                        }
-                        .padding(8)
-                        .background {
-                            if isSelected(day) {
-                                Color.clear
-                                    .habitGlassChip(tint: LiquidGlassStyle.primaryCapsuleTint)
-                            } else {
-                                RoundedRectangle(cornerRadius: LiquidGlassStyle.cardCornerRadius)
-                                    .fill(Color.capsuleSecundary)
-                            }
-                        }
-                        .onTapGesture {
-                            selectedDate = calendar.startOfDay(for: day)
-                        }
+                        dayChip(for: day)
                     }
                 }
             }
-            .padding()
-            .cornerRadius(12)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 14)
             .offset(x: slideOffset)
-            .animation(.spring(response: 0.3, dampingFraction: 0.8), value: slideOffset)
+            .animation(AppTheme.softSpring, value: slideOffset)
             .gesture(
                 DragGesture()
                     .onChanged { value in
@@ -93,7 +66,7 @@ struct WeekView: View {
                             slideOffset = -300
                             shiftWeek(by: 1)
                         } else {
-                            withAnimation {
+                            withAnimation(AppTheme.softSpring) {
                                 slideOffset = 0
                             }
                         }
@@ -112,6 +85,56 @@ struct WeekView: View {
         }
     }
 
+    @ViewBuilder
+    private func dayChip(for day: Date) -> some View {
+        let selected = isSelected(day)
+        let today = calendar.isDateInToday(day)
+
+        VStack(spacing: 6) {
+            Text(shortWeekdayName(for: day))
+                .font(AppTheme.micro(11))
+                .foregroundColor(selected ? .fontSoft : .fontSoft.opacity(0.55))
+                .fontWeight(selected ? .semibold : .regular)
+
+            ZStack {
+                if today && !selected {
+                    Circle()
+                        .stroke(LiquidGlassStyle.brandTint.opacity(0.45), lineWidth: 1.5)
+                        .frame(width: 32, height: 32)
+                }
+
+                Circle()
+                    .fill(selected ? Color.white.opacity(0.95) : Color.white.opacity(0.55))
+                    .frame(width: 32, height: 32)
+
+                Text(dayNumber(for: day))
+                    .font(AppTheme.body(12))
+                    .foregroundColor(.fontSoft)
+            }
+        }
+        .padding(.vertical, 8)
+        .padding(.horizontal, 4)
+        .frame(maxWidth: .infinity)
+        .background {
+            if selected {
+                Color.clear
+                    .habitGlassChip(tint: LiquidGlassStyle.primaryCapsuleTint)
+            } else {
+                RoundedRectangle(cornerRadius: AppTheme.chipCornerRadius, style: .continuous)
+                    .fill(Color.capsuleSecundary.opacity(0.55))
+            }
+        }
+        .scaleEffect(selected ? 1.04 : 1)
+        .animation(AppTheme.snappySpring, value: selected)
+        .onTapGesture {
+            let impact = UIImpactFeedbackGenerator(style: .light)
+            impact.impactOccurred()
+            withAnimation(AppTheme.snappySpring) {
+                selectedDate = calendar.startOfDay(for: day)
+            }
+        }
+    }
+
     private func shiftWeek(by value: Int) {
         guard let newWeekStart = calendar.date(byAdding: .weekOfYear, value: value, to: currentWeekStart) else {
             withAnimation { slideOffset = 0 }
@@ -119,7 +142,7 @@ struct WeekView: View {
         }
 
         let weekday = calendar.component(.weekday, from: selectedDate)
-        withAnimation {
+        withAnimation(AppTheme.softSpring) {
             currentWeekStart = newWeekStart
             slideOffset = 0
             if let matchingDay = (0..<7).compactMap({
@@ -135,7 +158,7 @@ struct WeekView: View {
     private func syncWeek(to date: Date) {
         guard let weekStart = calendar.dateInterval(of: .weekOfYear, for: date)?.start else { return }
         if !calendar.isDate(weekStart, inSameDayAs: currentWeekStart) {
-            withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+            withAnimation(AppTheme.softSpring) {
                 currentWeekStart = weekStart
             }
         }

@@ -2,20 +2,26 @@ import SwiftUI
 
 struct StatsSectionView: View {
     var habitDataStore: HabitDataStore
+
     var body: some View {
-        
-        
-        VStack(spacing: 16) {
+        VStack(spacing: 14) {
             Text("Estatísticas")
-                .font(.custom("Poppins-SemiBold", size: 16))
+                .font(AppTheme.headline(16))
                 .foregroundColor(.fontSoft)
                 .frame(maxWidth: .infinity, alignment: .leading)
-            
-            HStack(spacing: 16) {
-                StatCardView(title: "Hábitos Criados", value: habitDataStore.createdHabitsCount())
-                StatCardView(title: "Habitos Completos", value: habitDataStore.completedHabitsCount())
+
+            HStack(spacing: 12) {
+                StatCardView(
+                    title: "Hábitos criados",
+                    value: habitDataStore.createdHabitsCount(),
+                    systemImage: "plus.circle.fill"
+                )
+                StatCardView(
+                    title: "Hábitos completos",
+                    value: habitDataStore.completedHabitsCount(),
+                    systemImage: "checkmark.seal.fill"
+                )
             }
         }
     }
 }
-

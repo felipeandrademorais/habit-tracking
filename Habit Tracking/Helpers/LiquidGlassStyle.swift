@@ -3,10 +3,10 @@ import SwiftUI
 /// Shared Liquid Glass tokens and modifiers for Habit Tracker chrome.
 /// Content surfaces (habit rows, pastel page fills) stay opaque; glass is for controls/navigation.
 enum LiquidGlassStyle {
-    static let chromeCornerRadius: CGFloat = 20
-    static let cardCornerRadius: CGFloat = 12
-    static let alertCornerRadius: CGFloat = 15
-    static let fabSize: CGFloat = 56
+    static let chromeCornerRadius: CGFloat = 22
+    static let cardCornerRadius: CGFloat = 14
+    static let alertCornerRadius: CGFloat = 18
+    static let fabSize: CGFloat = 58
 
     static var brandTint: Color { .defaultDark }
     static var primaryCapsuleTint: Color { .capsulePrimary }

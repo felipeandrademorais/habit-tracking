@@ -47,14 +47,26 @@ struct ModalHabitView: View {
     var body: some View {
         Form {
             Section {
-                VStack(spacing: 2) {
+                VStack(spacing: 8) {
                     Text(iconName)
-                        .font(.system(size: 60))
-                    
-                    Text("Clique no ícone para alterá-lo")
-                        .font(Font.custom("Poppins-Regular", size: 10))
+                        .font(.system(size: 64))
+                        .frame(width: 96, height: 96)
+                        .background(
+                            Circle()
+                                .fill(cor.opacity(0.55))
+                        )
+                        .overlay(
+                            Circle()
+                                .stroke(Color.white.opacity(0.7), lineWidth: 2)
+                        )
+                        .shadow(color: AppTheme.softShadow, radius: 8, x: 0, y: 4)
+
+                    Text("Toque para escolher um ícone")
+                        .font(AppTheme.micro(11))
+                        .foregroundColor(.fontSoft.opacity(0.55))
                 }
                 .frame(maxWidth: .infinity)
+                .padding(.vertical, 8)
                 .onTapGesture {
                     showIconPicker = true
                 }

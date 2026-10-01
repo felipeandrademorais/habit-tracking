@@ -4,77 +4,72 @@ struct HabitsTodayView: View {
     @EnvironmentObject var dataStore: HabitDataStore
     @State private var isShowingAddHabit: Bool = false
     @State private var habitToEdit: Habit? = nil
-    @State private var showAnimation: Bool = false
-    
+
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
-            VStack {
+            AppTheme.pageGradient
+                .ignoresSafeArea()
+
+            VStack(spacing: 0) {
                 WeekView(selectedDate: $dataStore.selectedDate)
-                .frame(maxHeight: 95)
-                
-                if (todaysHabits.isEmpty) {
-                    Spacer()
-                    Image("Woman")
-                        .resizable()
-                        .scaledToFit()
-                        .padding(40)
-                    
-                    Spacer()
+                    .frame(maxHeight: 108)
+
+                if todaysHabits.isEmpty {
+                    EmptyHabitsView {
+                        openAddHabit()
+                    }
                 } else {
-                    List {
-                        ForEach(todaysHabits) { habit in
-                            HabitRowView(
-                                habit: habit,
-                                selectedDate: dataStore.selectedDate
-                            )
-                            .padding(.vertical, 8)
-                            .listRowInsets(EdgeInsets())
-                            .listRowBackground(
-                                Color.white.opacity(0.001)
-                            )
-                            .listRowSeparator(.hidden)
-                            .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                                Button(role: .destructive) {
-                                    dataStore.removeHabit(habit)
-                                } label: {
-                                    ZStack {
-                                        VStack(spacing: 4) {
-                                            Image(systemName: "trash")
-                                                .font(.system(size: 18))
-                                                .foregroundColor(.white)
+                    VStack(spacing: AppTheme.rowSpacing) {
+                        DayProgressHeaderView(
+                            completedCount: completedCount,
+                            totalCount: todaysHabits.count,
+                            date: dataStore.selectedDate
+                        )
+                        .padding(.horizontal, AppTheme.screenPadding)
+                        .padding(.top, 12)
+
+                        List {
+                            ForEach(Array(todaysHabits.enumerated()), id: \.element.id) { index, habit in
+                                HabitRowView(
+                                    habit: habit,
+                                    selectedDate: dataStore.selectedDate
+                                )
+                                .listRowInsets(EdgeInsets(top: 6, leading: 0, bottom: 6, trailing: 0))
+                                .listRowBackground(Color.clear)
+                                .listRowSeparator(.hidden)
+                                .appearSoftly(delay: Double(index) * 0.04)
+                                .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                                    Button(role: .destructive) {
+                                        withAnimation(AppTheme.softSpring) {
+                                            dataStore.removeHabit(habit)
                                         }
+                                    } label: {
+                                        Image(systemName: "trash")
+                                            .font(.system(size: 18))
                                     }
-                                }
-                                .tint(.red)
-                                Button {
-                                    habitToEdit = habit
-                                } label: {
-                                    ZStack {
-                                        VStack(spacing: 4) {
-                                            Image(systemName: "applepencil.gen1")
-                                                .font(.system(size: 22))
-                                                .foregroundColor(.white)
-                                        }
-                                        .tint(.color2)
+                                    .tint(.red)
+
+                                    Button {
+                                        habitToEdit = habit
+                                    } label: {
+                                        Image(systemName: "applepencil.gen1")
+                                            .font(.system(size: 20))
                                     }
+                                    .tint(.color2)
                                 }
                             }
+                            .onDelete(perform: deleteHabits)
                         }
-                        .onDelete(perform: deleteHabits)
+                        .listStyle(.plain)
+                        .scrollContentBackground(.hidden)
+                        .padding(.horizontal, AppTheme.screenPadding)
+                        .scrollEdgeEffectStyle(.soft, for: .bottom)
                     }
-                    .listStyle(.plain)
-                    .listRowSeparator(.hidden)
-                    .padding()
-                    .scrollEdgeEffectStyle(.soft, for: .bottom)
                 }
             }
-            
+
             GlassEffectContainer {
-                Button(action: {
-                    let impactMed = UIImpactFeedbackGenerator(style: .medium)
-                    impactMed.impactOccurred()
-                    isShowingAddHabit = true
-                }) {
+                Button(action: openAddHabit) {
                     Image(systemName: "plus")
                         .font(.title2.weight(.semibold))
                         .frame(width: LiquidGlassStyle.fabSize, height: LiquidGlassStyle.fabSize)
@@ -82,12 +77,11 @@ struct HabitsTodayView: View {
                 .buttonStyle(.glassProminent)
                 .buttonBorderShape(.circle)
                 .tint(LiquidGlassStyle.brandTint)
+                .shadow(color: LiquidGlassStyle.brandTint.opacity(0.25), radius: 12, x: 0, y: 6)
             }
             .padding(.trailing, 20)
             .padding(.bottom, 24)
-            
         }
-        // Modal para adicionar novo hábito
         .sheet(isPresented: $isShowingAddHabit) {
             NavigationStack {
                 ModalHabitView(startDate: dataStore.selectedDate)
@@ -95,7 +89,6 @@ struct HabitsTodayView: View {
             }
             .presentationDragIndicator(.visible)
         }
-        // Modal para editar hábito (disparado ao atribuir um valor a habitToEdit)
         .sheet(item: $habitToEdit) { habit in
             NavigationStack {
                 ModalHabitView(habit: habit)
@@ -104,11 +97,21 @@ struct HabitsTodayView: View {
             .presentationDragIndicator(.visible)
         }
     }
-    
+
     private var todaysHabits: [Habit] {
         dataStore.habits(for: dataStore.selectedDate)
     }
-    
+
+    private var completedCount: Int {
+        todaysHabits.filter { $0.isCompleted(on: dataStore.selectedDate) }.count
+    }
+
+    private func openAddHabit() {
+        let impactMed = UIImpactFeedbackGenerator(style: .medium)
+        impactMed.impactOccurred()
+        isShowingAddHabit = true
+    }
+
     private func deleteHabits(at offsets: IndexSet) {
         offsets.forEach { index in
             let habit = todaysHabits[index]
@@ -119,7 +122,7 @@ struct HabitsTodayView: View {
 
 struct HabitsTodayView_Previews: PreviewProvider {
     static var previews: some View {
-        return HabitsTodayView()
+        HabitsTodayView()
             .environmentObject(HabitDataStore.sampleDataStore)
     }
 }

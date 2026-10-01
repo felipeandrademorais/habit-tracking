@@ -6,8 +6,8 @@ struct TaskCycleCardView: View {
 
     var body: some View {
         VStack(alignment: .center, spacing: 16) {
-            Text("Defina o ciclo do seu Hábito")
-                .font(Font.custom("Poppins-Regular", size: 14))
+            Text("Defina o ciclo do seu hábito")
+                .font(AppTheme.body(14))
                 .foregroundColor(.fontSoft)
 
             ZStack(alignment: .leading) {

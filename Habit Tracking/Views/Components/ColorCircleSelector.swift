@@ -14,13 +14,27 @@ struct ColorCircleSelector: View {
     var body: some View {
         Circle()
             .fill(color)
-            .frame(width: 32, height: 32)
+            .frame(width: 36, height: 36)
             .overlay(
                 Circle()
-                    .stroke(isSelected ? Color.black.opacity(0.5) : Color.white.opacity(0.8), lineWidth: 3)
+                    .stroke(
+                        isSelected ? LiquidGlassStyle.brandTint : Color.white.opacity(0.85),
+                        lineWidth: isSelected ? 3 : 2
+                    )
             )
+            .overlay {
+                if isSelected {
+                    Image(systemName: "checkmark")
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundColor(.fontSoft.opacity(0.7))
+                }
+            }
+            .scaleEffect(isSelected ? 1.08 : 1)
+            .animation(AppTheme.snappySpring, value: isSelected)
             .padding(.trailing, 4)
             .onTapGesture {
+                let impact = UIImpactFeedbackGenerator(style: .light)
+                impact.impactOccurred()
                 onTap()
             }
     }
